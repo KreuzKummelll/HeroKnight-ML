@@ -611,6 +611,11 @@ MonoBehaviour:
   isTrainingMode: 1
   isFrozen: 0
   spawnPoint: {fileID: 0}
+  move: 0
+  attack: 0
+  block: 0
+  blockUp: 0
+  jump: 0
 --- !u!114 &1428249257
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -624,7 +629,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 10
+    VectorObservationSize: 9
     NumStackedVectorObservations: 1
     VectorActionSize: 05000000
     VectorActionDescriptions: []

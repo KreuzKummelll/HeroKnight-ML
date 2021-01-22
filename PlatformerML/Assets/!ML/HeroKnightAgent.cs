@@ -36,6 +36,15 @@ public class HeroKnightAgent : Agent {
     [SerializeField] bool isFrozen = false;
     [SerializeField] Transform spawnPoint;
 
+    [SerializeField] float move;
+    [SerializeField] float attack;
+    [SerializeField] float block;
+    [SerializeField] float blockUp;
+    [SerializeField] float jump;
+    //[SerializeField] float roll; // Roll does not work because of animation event cannot connect to Agent
+
+    [SerializeField] Coinage coinage;
+
     public override void Initialize()
     {
         if (!isTrainingMode) MaxStep = 0;
@@ -44,6 +53,8 @@ public class HeroKnightAgent : Agent {
     public override void OnEpisodeBegin()
     {
         transform.position = spawnPoint.position;
+        move = 0; attack = 0; block = 0; blockUp = 0; jump = 0;
+        coinage.RefreshCoinage();
     }
 
     /// <summary>
@@ -55,7 +66,6 @@ public class HeroKnightAgent : Agent {
         sensor.AddObservation(m_speed); // +1
         sensor.AddObservation(transform.localPosition.normalized);
         sensor.AddObservation(m_grounded); // +1
-        sensor.AddObservation(m_rolling); // + 1
         sensor.AddObservation(m_facingDirection); // +1
         sensor.AddObservation(m_currentAttack); // +1
         sensor.AddObservation(m_timeSinceAttack); // +1
@@ -76,13 +86,13 @@ public class HeroKnightAgent : Agent {
         // Don't take actions if frozen
         if (isFrozen) return;
 
-        float move = vectorAction[0];
-        float attack = vectorAction[1];
-        float block = vectorAction[2];
-        float blockUp = vectorAction[3];
-        float jump = vectorAction[4];
-        float roll = vectorAction[5];
-        CustomUpdate(move, attack, block, blockUp, jump, roll);
+        move = vectorAction[0];
+        attack = vectorAction[1];
+        block = vectorAction[2];
+        blockUp = vectorAction[3];
+        jump = vectorAction[4];
+        
+        CustomUpdate();
         // I will make sure to set the decision requester to 20
     }
 
@@ -109,8 +119,10 @@ public class HeroKnightAgent : Agent {
     }
 
     // Update is called once per frame
-    void CustomUpdate (float move, float attack, float block, float blockUp, float jump, float roll)
+    void CustomUpdate ()
     {
+
+
         // Increase timer that controls attack combo
         m_timeSinceAttack += Time.deltaTime;
 
@@ -129,12 +141,12 @@ public class HeroKnightAgent : Agent {
         }
 
         // -- Handle input and movement --
-        float inputX = move;
-        bool leftMouseDown = attack > 0.5f;
-        bool rightMouseDown = block > 0.5f;
-        bool rightMouseUp = blockUp > 0.5f;
-        bool spaceKeyDown = jump > 0.5f;
-        bool shiftDown = roll > 0.5f;
+        float inputX = move * 2;
+        bool leftMouseDown = attack > 0f;
+        bool rightMouseDown = block > 0f;
+        bool rightMouseUp = blockUp > 0f;
+        bool spaceKeyDown = jump > 0f;
+   
 
         // Swap direction of sprite depending on walk direction
         if (inputX > 0)
@@ -152,9 +164,17 @@ public class HeroKnightAgent : Agent {
         // Move
         if (!m_rolling)
         {
-            m_body2d.velocity = new Vector2(inputX * m_speed, m_body2d.velocity.y);
-            Debug.Log("Velocity " + m_body2d.velocity);
-            Debug.Log("X Horizontal" + inputX);
+            var vel = new Vector2(inputX * m_speed, m_body2d.velocity.y);
+            m_body2d.velocity = vel;
+            if (Mathf.Abs(vel.x) > Mathf.Epsilon)
+            {
+                if (vel.x > 0.1f)
+                {
+                    AddReward(vel.x * 1 / (MaxStep/2));
+                } else if (vel.x < -0.1f) {
+                    AddReward(vel.x * 1 / (MaxStep));
+                }
+            }
         }
 
         //Set AirSpeed in animator
@@ -173,12 +193,15 @@ public class HeroKnightAgent : Agent {
 
         //Hurt
         else if (Input.GetKeyDown("q"))
+        {
             m_animator.SetTrigger("Hurt");
+        }
 
         //Attack
         else if (leftMouseDown && m_timeSinceAttack > 0.25f)
         {
             m_currentAttack++;
+            AddReward(-1 / MaxStep);
 
             // Loop back to one after third attack
             if (m_currentAttack > 3)
@@ -205,13 +228,13 @@ public class HeroKnightAgent : Agent {
         else if (rightMouseUp)
             m_animator.SetBool("IdleBlock", false);
 
-        // Roll
-        else if (shiftDown && !m_rolling)
-        {
-            m_rolling = true;
-            m_animator.SetTrigger("Roll");
-            m_body2d.velocity = new Vector2(m_facingDirection * m_rollForce, m_body2d.velocity.y);
-        }
+        //// Roll
+        //else if (shiftDown && !m_rolling)
+        //{
+        //    m_rolling = true;
+        //    m_animator.SetTrigger("Roll");
+        //    m_body2d.velocity = new Vector2(m_facingDirection * m_rollForce, m_body2d.velocity.y);
+        //}
 
 
         //Jump
@@ -276,10 +299,15 @@ public class HeroKnightAgent : Agent {
             AddReward(-4);
             EndEpisode();
         }
-        if (m_body2d.velocity.x > 0.5f || m_body2d.velocity.x < -0.5f)
+        if (m_body2d.velocity.x > 0.9f || m_body2d.velocity.x < -0.9f)
         {
             AddReward(1 / MaxStep);
         }
+        if (m_grounded)
+        {
+            AddReward(1 / (MaxStep / 2));
+        }
+
     }
    
     private void OnCollisionEnter2D(Collision2D collision)
@@ -309,6 +337,20 @@ public class HeroKnightAgent : Agent {
                 AddReward(5);
             }
             EndEpisode();
+        }
+        else if (collision.transform.CompareTag("wall"))
+        {
+            AddReward(-1 / MaxStep);
+        }
+        else if (collision.transform.CompareTag("platform"))
+        {
+            AddReward(1 / MaxStep);
+        }
+        else if (collision.transform.CompareTag("coin"))
+        {
+            AddReward(1f);
+
+            collision.gameObject.SetActive(false);
         }
     }
     

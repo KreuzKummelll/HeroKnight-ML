@@ -22,11 +22,11 @@ behaviors:
       extrinsic:
         gamma: 0.99
         strength: 1.0
-#      curiosity:
-#        gamma: 0.99
-#        strength: 0.02
-#        encoding_size: 256
-#        learning_rate: 0.0003
+      curiosity:
+        gamma: 0.99
+        strength: 0.02
+        encoding_size: 256
+        learning_rate: 0.0003
     init_path: null
     keep_checkpoints: 5
     checkpoint_interval: 50000

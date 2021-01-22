@@ -1,0 +1,46 @@
+{
+    "name": "root",
+    "metadata": {
+        "timer_format_version": "0.1.0",
+        "start_time_seconds": "1611310001",
+        "python_version": "3.7.3 (default, May 29 2020, 15:28:38) \n[Clang 11.0.3 (clang-1103.0.32.62)]",
+        "command_line_arguments": "/Users/kreuzkummelll/Developer/GameDev/MyMLAgents/python_mlagents_env/first_ml_env/bin/mlagents-learn trainer_config.yaml --resume --run-id knight_goals_07-coins",
+        "mlagents_version": "0.17.0",
+        "mlagents_envs_version": "0.17.0",
+        "communication_protocol_version": "1.0.0",
+        "tensorflow_version": "2.2.0",
+        "end_time_seconds": "1611310001"
+    },
+    "total": 0.02167517199999991,
+    "count": 1,
+    "self": 0.006117146999999878,
+    "children": {
+        "run_training.setup": {
+            "total": 0.007782493999999973,
+            "count": 1,
+            "self": 0.007782493999999973
+        },
+        "TrainerController.start_learning": {
+            "total": 0.007775531000000058,
+            "count": 1,
+            "self": 0.0011747970000002272,
+            "children": {
+                "TrainerController._reset_env": {
+                    "total": 0.006534951999999983,
+                    "count": 1,
+                    "self": 0.006534951999999983
+                },
+                "trainer_threads": {
+                    "total": 1.3479999998455838e-06,
+                    "count": 1,
+                    "self": 1.3479999998455838e-06
+                },
+                "TrainerController._save_model": {
+                    "total": 6.44340000000021e-05,
+                    "count": 1,
+                    "self": 6.44340000000021e-05
+                }
+            }
+        }
+    }
+}
